@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Shape Generator</title>
+</head>
+<body>
+    <h1>Random Shape Generator</h1>
+
+    <!-- Upload Form -->
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="image">Upload an image:</label>
+        <input type="file" name="image" id="image" accept="image/*" required>
+        <button type="submit">Start</button>
+    </form>
+
+    <!-- Canvas Display -->
+    <h3>Generated Canvas:</h3>
+    <img id="canvas" src="" alt="Canvas will appear here" style="border: 1px solid #000; max-width: 100%;">
+
+    <!-- Stop Button -->
+    <button id="stopBtn" style="display: none;">Stop</button>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const canvas = document.getElementById('canvas');
+        const stopBtn = document.getElementById('stopBtn');
+        let updateInterval;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const imageInput = document.getElementById('image');
+            formData.append('image', imageInput.files[0]);
+
+            // Start the shape generation
+            const response = await fetch('/', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (data.status === 'started') {
+                canvas.src = `/canvas?${new Date().getTime()}`; // Load the initial canvas
+                stopBtn.style.display = 'block';
+
+                // Update canvas every second
+                updateInterval = setInterval(() => {
+                    canvas.src = `/canvas?${new Date().getTime()}`; // Bypass cache
+                }, 1000);
+            }
+        });
+
+        stopBtn.addEventListener('click', async () => {
+            await fetch('/stop', { method: 'POST' });
+            clearInterval(updateInterval);
+            stopBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
